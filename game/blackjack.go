@@ -3,7 +3,8 @@ package game
 import (
 	"errors"
 	"strconv"
-	"sync"
+
+	"blackjack/storage"
 )
 
 const (
@@ -13,7 +14,6 @@ const (
 	tie
 )
 
-var inMemStorage = sync.Map{}
 var suits = []string{"♠", "♦", "♣", "♥"}
 
 type State struct {
@@ -26,14 +26,15 @@ type State struct {
 	result     int
 }
 
-func New(sessionID string) (*State, error) {
-	var state State
-	s, ok := inMemStorage.Load(sessionID)
-	if ok {
-		state, ok = s.(State)
-		if !ok {
-			return nil, errors.New("invalid state object")
-		}
+func New(gameStateStorage storage.GameStateStorage, sessionID string) (*State, error) {
+	s, err := gameStateStorage.GetGameState(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	state := fromStorageGameState(s)
+	if state == nil {
+		state = &State{}
 	}
 
 	var dealerHand, playerHand []int
@@ -44,41 +45,28 @@ func New(sessionID string) (*State, error) {
 	state.dealerHand = dealerHand
 	state.playerHand = playerHand
 	state.result = undecided
-	inMemStorage.Store(sessionID, state)
-	return &state, nil
+	gameStateStorage.UpsertGameState(sessionID, state.ToStorageGameState())
+	return state, nil
 }
 
-func Delete(sessionID string) {
-	inMemStorage.Delete(sessionID)
+func Get(gameStateStorage storage.GameStateStorage, sessionID string) (*State, error) {
+	s, err := gameStateStorage.GetGameState(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return fromStorageGameState(s), nil
 }
 
-func Get(sessionID string) (*State, error) {
-	s, ok := inMemStorage.Load(sessionID)
-	if !ok {
-		return nil, nil
+func Hit(gameStateStorage storage.GameStateStorage, sessionID string) (*State, error) {
+	s, err := gameStateStorage.GetGameState(sessionID)
+	if s == nil || err != nil {
+		return nil, err
 	}
 
-	state, ok := s.(State)
-	if !ok {
-		return nil, errors.New("invalid state object")
-	}
-
-	return &state, nil
-}
-
-func Hit(sessionID string) (*State, error) {
-	s, ok := inMemStorage.Load(sessionID)
-	if !ok {
-		return nil, nil
-	}
-
-	state, ok := s.(State)
-	if !ok {
-		return nil, errors.New("invalid state object")
-	}
-
+	state := fromStorageGameState(s)
 	if state.result != undecided {
-		return &state, errors.New("this game is already over, start a new game or reset the session to continue playing")
+		return state, errors.New("this game is already over, start a new game or reset the session to continue playing")
 	}
 
 	new, deck := draw(1, state.deck)
@@ -89,23 +77,19 @@ func Hit(sessionID string) (*State, error) {
 		state.losses++
 	}
 
-	inMemStorage.Store(sessionID, state)
-	return &state, nil
+	gameStateStorage.UpsertGameState(sessionID, state.ToStorageGameState())
+	return state, nil
 }
 
-func Stand(sessionID string) (*State, error) {
-	s, ok := inMemStorage.Load(sessionID)
-	if !ok {
-		return nil, nil
+func Stand(gameStateStorage storage.GameStateStorage, sessionID string) (*State, error) {
+	s, err := gameStateStorage.GetGameState(sessionID)
+	if s == nil || err != nil {
+		return nil, err
 	}
 
-	state, ok := s.(State)
-	if !ok {
-		return nil, errors.New("invalid game object")
-	}
-
+	state := fromStorageGameState(s)
 	if state.result != undecided {
-		return &state, errors.New("this game is already over, start a new game or reset the game session to continue playing")
+		return state, errors.New("this game is already over, start a new game or reset the session to continue playing")
 	}
 
 	dealerScore := scoreHand(state.dealerHand)
@@ -128,8 +112,12 @@ func Stand(sessionID string) (*State, error) {
 		state.ties++
 	}
 
-	inMemStorage.Store(sessionID, state)
-	return &state, nil
+	gameStateStorage.UpsertGameState(sessionID, state.ToStorageGameState())
+	return state, nil
+}
+
+func Delete(gameStateStorage storage.GameStateStorage, sessionID string) {
+	gameStateStorage.DeleteGameState(sessionID)
 }
 
 func scoreHand(hand []int) int {
@@ -204,4 +192,32 @@ func intToCard(cardInt int) string {
 	}
 
 	return card + suits[cardInt/100]
+}
+
+func (s State) ToStorageGameState() *storage.GameState {
+	return &storage.GameState{
+		Deck:       s.deck,
+		DealerHand: s.dealerHand,
+		PlayerHand: s.playerHand,
+		Wins:       s.wins,
+		Losses:     s.losses,
+		Ties:       s.ties,
+		Result:     s.result,
+	}
+}
+
+func fromStorageGameState(gameState *storage.GameState) *State {
+	if gameState == nil {
+		return nil
+	}
+
+	return &State{
+		deck:       gameState.Deck,
+		dealerHand: gameState.DealerHand,
+		playerHand: gameState.PlayerHand,
+		wins:       gameState.Wins,
+		losses:     gameState.Losses,
+		ties:       gameState.Ties,
+		result:     gameState.Result,
+	}
 }

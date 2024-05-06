@@ -1,15 +1,10 @@
 package main
 
 import (
-	"net/http"
-	"time"
-
-	"blackjack/api/routes"
+	"blackjack/api"
 	"blackjack/config"
-	"blackjack/middleware"
+	"blackjack/storage"
 
-	"github.com/go-chi/chi/v5"
-	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/sessions"
 )
 
@@ -26,13 +21,11 @@ func main() {
 		HttpOnly: true,
 	}
 
-	r := chi.NewRouter()
-	r.Use(middleware.Session(store))
-	r.Use(chiMiddleware.Timeout(time.Duration(config.RequestTimeoutSeconds) * time.Second))
+	storage, err := storage.NewGameStateStorage(config.StorageBackend)
+	if err != nil {
+		panic(err)
+	}
 
-	r.Get("/game", routes.GetGame)
-	r.Delete("/game", routes.DeleteGame)
-	r.Post("/game", routes.UpsertGame)
-
-	http.ListenAndServe(":8080", r)
+	server := api.NewServer(store, storage, config.RequestTimeoutSeconds)
+	server.Start()
 }

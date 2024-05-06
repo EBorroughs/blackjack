@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	RequestTimeoutSeconds int `json:"requestTimeoutSeconds"`
-	SessionMaxAgeSeconds  int `json:"sessionMaxAgeSeconds"`
+	StorageBackend        string `json:"storageBackend"`
+	RequestTimeoutSeconds int    `json:"requestTimeoutSeconds"`
+	SessionMaxAgeSeconds  int    `json:"sessionMaxAgeSeconds"`
 }
 
 func LoadConfig() (Config, error) {

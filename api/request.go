@@ -1,13 +1,13 @@
 package api
 
-type UpsertAction string
+type upsertAction string
 
 const (
-	UpsertCreate UpsertAction = "create"
-	UpsertHit    UpsertAction = "hit"
-	UpsertStand  UpsertAction = "stand"
+	upsertCreate upsertAction = "create"
+	upsertHit    upsertAction = "hit"
+	upsertStand  upsertAction = "stand"
 )
 
-type UpsertGameRequestBody struct {
-	Action UpsertAction `json:"action"`
+type upsertGameRequestBody struct {
+	Action upsertAction `json:"action"`
 }

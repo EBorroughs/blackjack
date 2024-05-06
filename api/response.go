@@ -6,7 +6,7 @@ import (
 	"blackjack/game"
 )
 
-type GameStateResponse struct {
+type gameStateResponse struct {
 	DealerHand []string `json:"dealerHand"`
 	PlayerHand []string `json:"playerHand"`
 	Wins       int      `json:"wins"`
@@ -14,9 +14,9 @@ type GameStateResponse struct {
 	Ties       int      `json:"ties"`
 }
 
-func GameStateToResponse(gameState *game.State) GameStateResponse {
+func gameStateToResponse(gameState *game.State) gameStateResponse {
 	dealerHand, playerHand := gameState.ToCardFormat()
-	resp := GameStateResponse{
+	resp := gameStateResponse{
 		DealerHand: dealerHand,
 		PlayerHand: playerHand,
 		Wins:       gameState.Wins(),
@@ -27,7 +27,7 @@ func GameStateToResponse(gameState *game.State) GameStateResponse {
 	return resp
 }
 
-func RespondSuccess(w http.ResponseWriter, body []byte, status int) {
+func respondSuccess(w http.ResponseWriter, body []byte, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if len(body) > 0 {
@@ -35,10 +35,10 @@ func RespondSuccess(w http.ResponseWriter, body []byte, status int) {
 	}
 }
 
-func RespondError(w http.ResponseWriter, message string, status int) {
+func respondError(w http.ResponseWriter, message string, status int) {
 	http.Error(w, message, status)
 }
 
-func RespondInternalServerError(w http.ResponseWriter) {
-	RespondError(w, "internal server error", http.StatusInternalServerError)
+func respondInternalServerError(w http.ResponseWriter) {
+	respondError(w, "internal server error", http.StatusInternalServerError)
 }
