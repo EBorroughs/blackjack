@@ -1,0 +1,4 @@
+{
+    "requestTimeoutSeconds": 60,
+    "sessionMaxAgeSeconds": 300 
+}
