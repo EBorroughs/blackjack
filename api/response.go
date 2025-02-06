@@ -6,7 +6,7 @@ import (
 	"blackjack/game"
 )
 
-type gameStateResponse struct {
+type GameStateResponse struct {
 	DealerHand []string `json:"dealerHand"`
 	PlayerHand []string `json:"playerHand"`
 	Wins       int      `json:"wins"`
@@ -14,9 +14,9 @@ type gameStateResponse struct {
 	Ties       int      `json:"ties"`
 }
 
-func gameStateToResponse(gameState *game.State) gameStateResponse {
+func gameStateToResponse(gameState *game.State) GameStateResponse {
 	dealerHand, playerHand := gameState.ToCardFormat()
-	resp := gameStateResponse{
+	resp := GameStateResponse{
 		DealerHand: dealerHand,
 		PlayerHand: playerHand,
 		Wins:       gameState.Wins(),

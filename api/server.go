@@ -13,12 +13,14 @@ import (
 )
 
 type Server struct {
+	address string
+	port    string
 	router  *chi.Mux
 	storage storage.GameStateStorage
 }
 
-func NewServer(store *sessions.CookieStore, storage storage.GameStateStorage, requestTimeoutSeconds int) *Server {
-	s := &Server{storage: storage}
+func NewServer(store *sessions.CookieStore, storage storage.GameStateStorage, address, port string, requestTimeoutSeconds int) *Server {
+	s := &Server{address: address, port: port, storage: storage}
 	r := chi.NewRouter()
 	r.Use(middleware.Session(store))
 	r.Use(chiMiddleware.Timeout(time.Duration(requestTimeoutSeconds) * time.Second))
@@ -31,5 +33,9 @@ func NewServer(store *sessions.CookieStore, storage storage.GameStateStorage, re
 }
 
 func (s Server) Start() {
-	http.ListenAndServe(":8080", s.router)
+	address := s.address
+	if s.port != "" {
+		address += ":" + s.port
+	}
+	http.ListenAndServe(address, s.router)
 }

@@ -1,4 +1,6 @@
 {
+    "serverAddress": "localhost",
+    "port": "8080",
     "storageBackend": "inMemory",
     "requestTimeoutSeconds": 60,
     "sessionMaxAgeSeconds": 300 

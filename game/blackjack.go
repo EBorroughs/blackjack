@@ -35,6 +35,8 @@ func New(gameStateStorage storage.GameStateStorage, sessionID string) (*State, e
 	state := fromStorageGameState(s)
 	if state == nil {
 		state = &State{}
+	} else if state.result == undecided {
+		state.losses++
 	}
 
 	var dealerHand, playerHand []int

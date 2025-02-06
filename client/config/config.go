@@ -7,11 +7,8 @@ import (
 )
 
 type Config struct {
-	ServerAddress         string `json:"serverAddress"`
-	Port                  string `json:"port"`
-	StorageBackend        string `json:"storageBackend"`
-	RequestTimeoutSeconds int    `json:"requestTimeoutSeconds"`
-	SessionMaxAgeSeconds  int    `json:"sessionMaxAgeSeconds"`
+	ServerAddress string `json:"serverAddress"`
+	Port          string `json:"port"`
 }
 
 func LoadConfig() (Config, error) {

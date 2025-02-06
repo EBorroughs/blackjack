@@ -26,6 +26,6 @@ func main() {
 		panic(err)
 	}
 
-	server := api.NewServer(store, storage, config.RequestTimeoutSeconds)
+	server := api.NewServer(store, storage, config.ServerAddress, config.Port, config.RequestTimeoutSeconds)
 	server.Start()
 }
